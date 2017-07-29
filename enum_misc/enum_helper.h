@@ -1,53 +1,32 @@
 #ifndef ENUM_HELPER_H
 #define ENUM_HELPER_H
-template<class Enum>
+
+#include <type_traits>
+
+template<typename Enum>
+using use_if_enum = typename std::enable_if<std::is_enum<Enum>::value, Enum>::type;
+
+template<typename Enum, typename = use_if_enum<Enum>>
 class enum_helper
 {
 private:
   unsigned int m_pos;
 public:
-  enum_helper (Enum init);
-  ~enum_helper ();
-  enum_helper<Enum> &operator++ ();
-  bool operator== (const enum_helper<Enum> &cmp) const;
-  bool operator!= (const enum_helper<Enum> &cmp) const;
-  Enum operator* () const;
+  enum_helper (Enum init) { m_pos = static_cast<unsigned int> (init); }
+  ~enum_helper () {}
+
+  enum_helper<Enum> &operator++ ()                      { m_pos++; return *this; }
+  bool operator == (const enum_helper<Enum> &rhs) const { return m_pos == rhs.m_pos; }
+  bool operator != (const enum_helper<Enum> &rhs) const { return m_pos != rhs.m_pos; }
+  Enum operator *  ()                             const { return static_cast<Enum> (m_pos); }
 };
 
-template<class Enum>
-enum_helper<Enum>::enum_helper (Enum init)
-{
-  m_pos = (unsigned int)init;
-}
+template<typename Enum, typename = use_if_enum<Enum>>
+auto enum_begin (Enum, Enum = Enum ()) -> decltype (Enum ()) {return static_cast<Enum> (0);}
 
-template<class Enum>
-enum_helper<Enum>::~enum_helper ()
-{
+template<typename Enum, typename = use_if_enum<Enum>>
+auto enum_end (Enum, Enum = Enum ()) -> decltype (Enum::COUNT) {return static_cast<Enum> (Enum::COUNT);}
 
-}
 
-template<class Enum>
-enum_helper<Enum> &enum_helper<Enum>::operator++ ()
-{
-  m_pos++;
-  return *this;
-}
 
-template<class Enum>
-bool enum_helper<Enum>::operator == (const enum_helper<Enum> &cmp) const
-{
-  return cmp.m_pos == m_pos;
-}
-
-template<class Enum>
-bool enum_helper<Enum>::operator != (const enum_helper<Enum> &cmp) const
-{
-  return cmp.m_pos != m_pos;
-}
-
-template<class Enum>
-Enum enum_helper<Enum>::operator* () const
-{
-  return (Enum)m_pos;
-}
 #endif // ENUM_HELPER_H
